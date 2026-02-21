@@ -1,0 +1,22 @@
+package collection.list;
+
+import java.util.Stack;
+
+public class StackDemo {
+    public static void main(String[] args) {
+
+        Stack s = new Stack() ;
+        s.push("chanchal") ;
+        s.push("Mishra") ;
+        s.push("Bansi") ;
+        System.out.println(s);   // [chanchal, Mishra, Bansi]
+        System.out.println(s.search("chanchal")); // returns 3 as offset
+        System.out.println(s.search("Bansi"));   // returns 1 as offset
+        System.out.println(s.search("Z"));   // returns -1 as offset
+        s.pop();  // will remove last inserted object
+        System.out.println(s);  // [chanchal, Mishra]
+        System.out.println(s.peek()); // will print the top element at stack
+        System.out.println(s.empty());  // false
+
+    }
+}
