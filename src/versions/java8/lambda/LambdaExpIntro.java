@@ -7,10 +7,10 @@ import java.util.List;
 /**
  * Comparison between Traditional Methods and Lambda Expressions
  */
-public class LambdaExpDemo1 {
+public class LambdaExpIntro {
     public static void main(String[] args) {
         // Traditional Method
-        List<String> names = Arrays.asList("Chanchal","Sonu","Monu","Golu","Menu");
+        List<String> names = Arrays.asList("Chanchal","Ram","Shyam","Amit","Menu");
         Collections.sort(names, new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
@@ -22,7 +22,7 @@ public class LambdaExpDemo1 {
         }
 
         // Lambda Expression
-        List<String> lambdaName = Arrays.asList("Chanchal","Sonu","Monu","Golu","Menu");
+        List<String> lambdaName = Arrays.asList("Chanchal","Ram","Shyam","Amit","Menu");
         lambdaName.sort((a,b) -> a.compareTo(b));
         lambdaName.forEach(System.out::println);
 

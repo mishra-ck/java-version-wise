@@ -14,7 +14,7 @@ interface Printer{
 interface MathOperation {
     int operate(int a, int b);
 }
-public class LambdaExpDemo2 {
+public class LambdaExpSyntax {
     public static void main(String[] args) {
 
         // No Parameter
