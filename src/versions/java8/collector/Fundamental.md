@@ -19,7 +19,7 @@ A Collector is specified by four functions that work together to accumulate entr
       R = result type         (e.g., List, String, Map)
 ```
 
-## Let try to understand internals of  `collect()` Terminal Operation :-
+## ## Sequential Stream `collect()` Flow Step By Step :-
 ```java 
 List<String> names = List.of("Alice", "Bob", "Charlie", "Diana");
 List<String> result = names.stream()
@@ -27,7 +27,7 @@ List<String> result = names.stream()
     .map(String::toUpperCase)
     .collect(Collectors.toList());
 ```
-## Sequential Stream `collect()` Flow Step By Step :-
+
 ```
 Source: List["Alice", "Bob", "Charlie", "Diana"]
 Pipeline: filter(len>3) -> map(toUpperCase) -> collect(tolist) 
@@ -154,3 +154,100 @@ public static <T> Collector<T, ?, Set<T>> toSet() {
     );
 }
 ```
+
+## Parallel Stream `collect()` flow step by step
+```java
+SOURCE: List ["Alice","Bob","Charlie","Diana"]
+        List<String> result = names.parallelStream()
+        .filter(n -> n.length() > 3)
+        .map(String::toUpperCase)
+        .collect(Collectors.toList());
+```
+```
+    Key difference is COMBINER() is now called.
+    
+    STEP 1: Spliterator splits source into chunks
+        ArrayListSpliterator[0,4) splits:
+            Left:  [0,2)  → ["Alice", "Bob"]
+            Right: [2,4)  → ["Charlie", "Diana"]
+            
+        Further splits if more threads available:
+            Left-Left:  ["Alice"]
+            Left-Right: ["Bob"]
+            Right-Left: ["Charlie"]
+            Right-Right:["Diana"]
+    
+    STEP 2: ForkJoinPool assigns each chunk to a thread
+        Thread-1: processes ["Alice"]
+        Thread-2: processes ["Bob"]
+        Thread-3: processes ["Charlie"]
+        Thread-4: processes ["Diana"]
+
+    STEP 3: Each thread creates its OWN container — supplier.get()
+        Thread-1: A1 = new ArrayList<>()   ← separate instance!
+        Thread-2: A2 = new ArrayList<>()   ← separate instance!
+        Thread-3: A3 = new ArrayList<>()   ← separate instance!
+        Thread-4: A4 = new ArrayList<>()   ← separate instance!
+
+    STEP 4: Each thread independently accumulates
+        Thread-1: "Alice" → filter(true) → "ALICE" → A1.add("ALICE")
+        A1 = ["ALICE"]
+        
+        Thread-2: "Bob" → filter(false) → SKIP
+        A2 = []
+        
+        Thread-3: "Charlie" → filter(true) → "CHARLIE" → A3.add("CHARLIE")
+        A3 = ["CHARLIE"]
+        
+        Thread-4: "Diana" → filter(true) → "DIANA" → A4.add("DIANA")
+        A4 = ["DIANA"]
+
+    STEP 5: Combine phase — combiner() called (TREE REDUCTION)
+        NOT sequential merging! Tree-shaped combining:
+        
+        Level 2 (leaf): A1=["ALICE"], A2=[], A3=["CHARLIE"], A4=["DIANA"]
+        
+        Level 1:        combiner(A1, A2):
+                        A1.addAll(A2) → A1 = ["ALICE"]
+                        returns A1          
+                        combiner(A3, A4):
+                        A3.addAll(A4) → A3 = ["CHARLIE", "DIANA"]
+                        returns A3
+
+        Level 0 (root): combiner(A1, A3):
+                    A1.addAll(A3) → A1 = ["ALICE", "CHARLIE", "DIANA"]
+                    returns A1
+        
+        ORDERED result maintained because ORDERED characteristic present in source!
+        ForkJoinPool ensures left-then-right combine order when ORDERED.
+        
+        Final A = ["ALICE", "CHARLIE", "DIANA"]
+
+    STEP 6: Finisher applied → result returned
+        Same as sequential — IDENTITY_FINISH skips finisher call.
+        return ["ALICE", "CHARLIE", "DIANA"]
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
