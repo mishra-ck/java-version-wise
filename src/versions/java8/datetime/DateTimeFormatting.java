@@ -1,10 +1,17 @@
 package versions.java8.datetime;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
 
 public class DateTimeFormatting {
     public static void main(String[] args) {
+
+        /** --------- DateTime formatting in different ways  ------------- */
+
         LocalDateTime now = LocalDateTime.now();
         System.out.println("Now:"+ now); // Now:2026-03-03T23:54:07.713141
 
@@ -26,5 +33,37 @@ public class DateTimeFormatting {
         LocalDateTime parsed = LocalDateTime.parse(dateString,
                 DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         System.out.println("Parsed date time : "+ parsed);  // Parsed date time : 2026-03-03T23:50
+
+        /** --------   Temporal Adjusters ------------- */
+        LocalDate today = LocalDate.now();
+
+        // built-in adjusters
+        LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
+        System.out.println("First Day of Month :"+ firstDayOfMonth);  // First Day of Month :2026-03-01
+
+        LocalDate lastDayOfYear = today.with(TemporalAdjusters.lastDayOfYear());
+        System.out.println("Last of year : "+ lastDayOfYear); // Last of year : 2026-12-31
+
+
+        LocalDate nextMonday = today.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        System.out.println("Next monday :"+ nextMonday);  // Next monday :2026-03-09
+
+        // Custom business working day adjuster
+        TemporalAdjuster nextBusinessDay = temporal -> {
+            LocalDate date = LocalDate.from(temporal);
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+            if(dayOfWeek == DayOfWeek.FRIDAY){
+                return date.plusDays(3); // skip weekend
+            } else if (dayOfWeek == DayOfWeek.SATURDAY) {
+                return date.plusDays(2);
+            }else{
+                return date.plusDays(1);
+            }
+        };
+
+        LocalDate nextBusinessDate = today.with(nextBusinessDay);
+        System.out.println("Next business date :"+ nextBusinessDate); // Next business date :2026-03-05
+
+
     }
 }
